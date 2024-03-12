@@ -20,10 +20,32 @@ services:
       - ./app:/app
     command: >
       sh -c "python manage.py runserver 0.0.0.0:8000"
+    environment:
+      - DB_HOST=db #Name of DB service
+      - DB_USER=devuser
+      - DB_PASS=changeme
+    depends_on:
+      - db
+      # Docker will start 'db' service before running 'app' service
 
-# build>context '.' > CurrentDirectory  {Build docker file inside current directory}
-  # DEV=true >> if we're running using this Docker compose, which we're only going to be using for development, build argument called DEV and set the value to true.
-# Mapping port 8000 on our local machine to port 8000 inside our Docker container
-# Volumes > Way of mapping directories from our system into the Docker container.
-  # Mapping ./app (local) to /app (Docker) 
-# Command > Used to run the service (if not specified at run time)
+  # build>context '.' > CurrentDirectory  {Build docker file inside current directory}
+    # DEV=true >> if we're running using this Docker compose, which we're only going to be using for development, build argument called DEV and set the value to true.
+  # Mapping port 8000 on our local machine to port 8000 inside our Docker container
+  # Volumes > Way of mapping directories from our system into the Docker container.
+    # Mapping ./app (local) to /app (Docker) 
+  # Command > Used to run the service (if not specified at run time)
+
+  # Configuring Database Service
+  db:
+    image: postgres:13-alpine
+    volumes:
+      - dev-db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=devdb
+      - POSTGRES_USER=devuser
+      - POSTGRES_PASSWORD=changeme
+      # Defining Dev Credentials for Local Development Database
+
+
+volumes:
+  dev-db-data:
