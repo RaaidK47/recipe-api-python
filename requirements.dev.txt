@@ -1,0 +1,4 @@
+# We only install these development requirements when we're building an image for our local evelopment server.
+# Separating Development dependencies from Project dependencies
+
+flake8>=3.9.2,<=3.10

@@ -1,0 +1,29 @@
+# YAML is a human-readable data serialization language, just like XML and JSON.
+# YAML == Yet Another Markup Language
+  # Serialization is a process where one application 
+  # or service that has different data structures and is written in a different set of
+  # technologies can transfer data to another application using a standard format.
+
+version: "3.9"
+# ^Version of Docker Compose syntax that we are using
+
+# Docker Compose file consist of One or More service as needed by your application
+services:   
+  app:
+    build:
+      context: .
+      args:
+        - DEV=true
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app
+    command: >
+      sh -c "python manage.py runserver 0.0.0.0:8000"
+
+# build>context '.' > CurrentDirectory  {Build docker file inside current directory}
+  # DEV=true >> if we're running using this Docker compose, which we're only going to be using for development, build argument called DEV and set the value to true.
+# Mapping port 8000 on our local machine to port 8000 inside our Docker container
+# Volumes > Way of mapping directories from our system into the Docker container.
+  # Mapping ./app (local) to /app (Docker) 
+# Command > Used to run the service (if not specified at run time)

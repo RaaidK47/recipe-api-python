@@ -1,0 +1,8 @@
+# List of Files to exclude from Flake8 Linting
+
+[flake8]
+exclude =
+    migrations,
+    __pycache__,
+    manage.py,
+    settings.py

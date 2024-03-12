@@ -1,0 +1,21 @@
+# Specify a list of files that are going to be excluded from the Docker context.
+
+# When you run the Docker image, it uses something called the Docker context, which is the directory that you're running from.
+
+# Git
+.git
+.gitignore
+
+# Docker
+.docker 
+
+# Python
+app/__pycache__/ 
+app/*/__pycache__/
+app/*/*/__pycache__/
+app/*/*/*/__pycache__/
+.env/
+.venv/
+venv/
+
+# ^Python Cache Files are not required
