@@ -47,7 +47,7 @@ RUN python -m venv /py && \
 # - Upgrade Pip in our VENV
 # - Installing Postgresql Client Package inside our Alpine Image in order to Psycopg2 package to able to connect to Postgresql
 # - [A] Set a virual dependency packages - groups packages that we need to install into '.tmp-duild-deps' {packages = build-base , postgresql-dev , musl-dev} > required to install Psycopg2
-# - Install requirements in our Docker Image
+# - Install requirements in our Docker Image as specified in requirements.txt
 # - {BASH script condition} > Install DEV requirements if we are running through "docker-compose".  {fi  > ending an if statement}
 # - Remove tmp directory {we don't want any extra dependencies on our image. Once it's being created, it's best practice to keep Docker images as lightweight as possible.}
 # - Remove dependencies installed in step [A]
