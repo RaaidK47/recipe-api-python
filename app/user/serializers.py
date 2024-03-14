@@ -32,16 +32,22 @@ class UserSerializer(serializers.ModelSerializer):
         return get_user_model().objects.create_user(**validated_data)
         # ^This method is only called after validation as defined in class Meta is successful
 
+    # Overriding default 'update' method of `serializers.ModelSerializer`
     def update(self, instance, validated_data):
         """Update and return the user"""
-        password = validated_data.pop('password', None)
-        user = super().update(instance, validated_data)
+        # instance = Model Instance that is being updated
+        # validated_data = Data that is already passed through serlizer validation
 
+        password = validated_data.pop('password', None)  # Retreive that password from validated_data and remove it from validated_data afterwards
+        user = super().update(instance, validated_data)  # Call the default update method of `serializers.ModelSerializer`
+        # ^This will update the user instance with the validated_data (except for the password)
+
+        # Check if a password was provided and update the user's password if it was provided
         if password:
             user.set_password(password)
             user.save()
 
-        return user
+        return user  # Return the updated user instance (so it can be used by the View if required)
     
 
 class AuthTokenSerializer(serializers.Serializer):

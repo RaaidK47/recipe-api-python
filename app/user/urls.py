@@ -16,6 +16,7 @@ urlpatterns = [
     # name >> used for Reverse Lookup (as in test_user_api.py >> CREATE_USER_URL)
 
     path('token/', views.CreateTokenView.as_view(), name='token'),
+    path('me/', views.ManageUserView.as_view(), name='me'),
 ]
 
 # After creating URL, connect this to our Main APP >> (app/app/urls,py >> urlpatterns)
