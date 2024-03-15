@@ -2,6 +2,8 @@
 Database Models
 """
 
+from django.conf import settings  # Used in Recipe Model
+
 from django.db import models
 from django.contrib.auth.models import (
     AbstractBaseUser,  # contains the functionality for the authentication system, but not any fields.
@@ -52,3 +54,31 @@ class User(AbstractBaseUser, PermissionsMixin):
 # Add user model at end of settings.py file as below (IMPORTANT)
 # AUTH_USER_MODEL = 'core.User'
 # Also make sure that 'core' app is in INSTALLED_APPS in settings.py file
+
+
+class Recipe(models.Model):  # base Model Class
+    """Recipe object"""
+    
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,  # Referencing a string from settings.py file
+        on_delete=models.CASCADE,  # If the user is deleted, the assosiated recipes should also be deleted.
+        # Compliance with Data Compliance rules 
+    )
+    # ^ForeignKey is a relationship between two models.
+
+
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)  # blank=True means that the field is optional and can be left blank.
+    # TextField hold more content and multiple line of content
+    # In some databases, TextField is slow to load than CharField. (Hence not used everywhere)
+
+    time_minutes = models.IntegerField()
+    price = models.DecimalField(max_digits=5, decimal_places=2)
+    link = models.CharField(max_length=255, blank=True)
+
+    def __str__(self):
+        return self.title
+        # ^This will return the title of the recipe (When object is printed out as a string i.e. str(recipe) in test_create_recipe)
+        # ^This will be used in the admin panel to display the title of the recipe in the list of recipes.
+        # ^If not specified, the ID of object will be shown in Django Admin. (Not very useful)
+    
