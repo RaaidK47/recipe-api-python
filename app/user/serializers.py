@@ -17,7 +17,7 @@ class UserSerializer(serializers.ModelSerializer):
     """Serializer for the user object"""
 
     # Serialize is a way to convert object to and from python object
-    # Serialization >> JSON Object > Validation > Python Object / Database Model
+    # Serialization === JSON Object > Validation > Python Object / Database Model
 
     # v Definition of our Model
     class Meta:
