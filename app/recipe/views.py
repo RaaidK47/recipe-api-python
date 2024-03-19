@@ -79,10 +79,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
         # This ensure that new recipes created have the User ID Assigned.
   
 
-class TagViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+# NOTE: Mixins to be defined BEFORE GenericViewSet
+class TagViewSet(mixins.DestroyModelMixin,
+                 mixins.UpdateModelMixin, 
+                 mixins.ListModelMixin, 
+                 viewsets.GenericViewSet):
     # Generic View Set >> A class which specify a variety of views
     # > View > Functions for different request methods (for CRUD operations)
+    # Mixins Base Class is used to add additional functionality to a viewset.
     # mixins.ListModelMixin  > allows to add the listing functionality for listing models
+    # mixins.UpdateModelMixin > allows to add the update functionality for updating models
+    # mixins.DestroyModelMixin > allows to add the delete functionality for deleting models
+
 
     """Manage tags in the database."""
     serializer_class = serializers.TagSerializer
@@ -99,6 +107,8 @@ class TagViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
     permission_classes = [IsAuthenticated]
     # ^You have to be authenticated in order to use any endpoint provided by this view.
+
+
 
     # Overwriding default get_query_set() method
     def get_queryset(self):

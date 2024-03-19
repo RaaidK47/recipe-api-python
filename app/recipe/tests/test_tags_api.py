@@ -19,6 +19,10 @@ from recipe.serializers import TagSerializer
 
 TAGS_URL = reverse('recipe:tag-list')
 
+def detail_url(tag_id):
+    """Create and return a tag detail url"""
+    return reverse('recipe:tag-detail', args=[tag_id])
+
 
 def create_user(email='user@example.com', password='testpass123'):
     """Create and return a user"""
@@ -79,3 +83,38 @@ class PrivateTagsApiTests(TestCase):
         self.assertEqual(len(res.data), 1)  # Check that only 1 results is returned (Do not expect for firts (user2) tag to return)
         self.assertEqual(res.data[0]['name'], tag.name)  # First Result i.e. [0], the name should be tag.name for Authenticated User
         self.assertEqual(res.data[0]['id'], tag.id)
+
+
+    def test_update_tag(self):
+        """Test updating a tag"""
+
+        tag = Tag.objects.create(user=self.user, name='After Dinner')
+
+        payload = {'name': 'Dessert'}
+
+        url = detail_url(tag.id)
+        res = self.client.patch(url, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        tag.refresh_from_db()  # Refresh DB after PATCH request
+        self.assertEqual(tag.name, payload['name'])
+        self.assertEqual(tag.user, self.user)
+
+        # NOTE: Adding `mixins.UpdateModelMixin` to `TagViewSet` give the tags ability to UPDATE via Patch Request
+
+
+    def test_delete_tag(self):
+        """Test deleting a tag"""
+
+        tag = Tag.objects.create(user=self.user, name='Breakfast')
+
+        url = detail_url(tag.id)
+        res = self.client.delete(url)
+
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+        tags = Tag.objects.filter(user=self.user)  # Retreiving all Tags of Authenticated User
+        self.assertFalse(tags.exists())
+
+        # NOTE: Adding `mixins.DestroyModelMixin` to `TagViewSet` give the tags ability to DELETE via Delete Request
+
+
