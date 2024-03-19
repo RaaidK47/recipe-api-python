@@ -19,6 +19,8 @@ router.register('recipes', views.RecipeViewSet)  # Create a new endpoint `/api/r
 # i.e. `RecipeViewSet` is going to have Auto-Generated URLs depending on the functionality that's enabled on the ViewSet
 # Since we are using ModelViewSet in RecipeViewSet, it will support all available methods for CRUD (i.e. HTTP GET, POST, PUT, PATCH, DELETE)
 
+router.register('tags', views.TagViewSet)
+
 
 app_name = 'recipe'
 urlpatterns = [

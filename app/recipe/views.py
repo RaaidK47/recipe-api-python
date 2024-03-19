@@ -13,12 +13,20 @@ Views for the Recipe APIs
 
             
 
-from rest_framework import viewsets
+from rest_framework import (
+    viewsets,
+    mixins,  # mixins > Things that you can mix in to a view to add additional functionality
+)
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 from core.models import Recipe
+from core.models import Tag
+
+
 from recipe import serializers
+
+
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -71,6 +79,36 @@ class RecipeViewSet(viewsets.ModelViewSet):
         # This ensure that new recipes created have the User ID Assigned.
   
 
+class TagViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    # Generic View Set >> A class which specify a variety of views
+    # > View > Functions for different request methods (for CRUD operations)
+    # mixins.ListModelMixin  > allows to add the listing functionality for listing models
+
+    """Manage tags in the database."""
+    serializer_class = serializers.TagSerializer
+    queryset = Tag.objects.all()
+    # ^Specify which model to use
+
+    """Manage tags in the database."""
+    serializer_class = serializers.TagSerializer
+    queryset = Tag.objects.all()
+    # ^Specify which model to use
+
+    authentication_classes = [TokenAuthentication]
+    # ^In order to use any endpoint provided by this view, use Token Authentication
+
+    permission_classes = [IsAuthenticated]
+    # ^You have to be authenticated in order to use any endpoint provided by this view.
+
+    # Overwriding default get_query_set() method
+    def get_queryset(self):
+        """Retrieve tags for authenticated user."""
+        return self.queryset.filter(user=self.request.user).order_by('-name')
+        # ^Only return tags that belong to the authenticated user. (NOT All of the tags)
+        # We are filtering the `queryset` (i.e. all tags returned above) based on the `user` that is authenticated.
+        # ^We are ordering the tags by their name in descending order.
+        # ^This ensures that the tags are sorted in alphabetical order.
+        # ^This is important because we want to display the tags in alphabetical order.
 
 
 

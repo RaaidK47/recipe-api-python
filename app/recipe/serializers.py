@@ -6,7 +6,13 @@ Serializer for recipe APIs
 
 from rest_framework import serializers
 
-from core.models import Recipe
+from core.models import (
+    Recipe,
+    Tag
+)
+
+
+from django.db import models
 
 # This Serializer is going to represent a specific Model (i.e. Recipe Model)
 class RecipeSerializer(serializers.ModelSerializer):
@@ -29,5 +35,12 @@ class RecipeDetailSerializer(RecipeSerializer):
         # ^Adding 'description' field to Meta Values provided to RecipeSerializer
 
 
+class TagSerializer(serializers.ModelSerializer):
+    """Serializer for tags"""
+
+    class Meta:
+        model = Tag
+        fields = ('id', 'name')
+        read_only_fields = ('id',)
 
     

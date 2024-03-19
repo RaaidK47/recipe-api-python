@@ -55,6 +55,7 @@ class UserAdmin(BaseUserAdmin):
         }),
     )
 
+# Making Models manageable through Django Admin Interface
 admin.site.register(models.User, UserAdmin)
 admin.site.register(models.Recipe)
-
+admin.site.register(models.Tag)

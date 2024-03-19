@@ -76,9 +76,27 @@ class Recipe(models.Model):  # base Model Class
     price = models.DecimalField(max_digits=5, decimal_places=2)
     link = models.CharField(max_length=255, blank=True)
 
+    tags = models.ManyToManyField("Tag")  # ManyToManyField is a relationship between two models that allows a many-to-many relationship between the two models. # noqa: E501
+    # ^Many different recipes can have many different Tags
+    # any of our tags can be associated to any of our recipes and any of our recipes can be associated to any of our tags.
+
     def __str__(self):
         return self.title
         # ^This will return the title of the recipe (When object is printed out as a string i.e. str(recipe) in test_create_recipe)
         # ^This will be used in the admin panel to display the title of the recipe in the list of recipes.
         # ^If not specified, the ID of object will be shown in Django Admin. (Not very useful)
     
+
+class Tag(models.Model):
+    """Tag for filtering recipes"""  # < Primary usage of Tag
+
+    name = models.CharField(max_length=255)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
+
+    def __str__(self):
+        return self.name
+
+
