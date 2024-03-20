@@ -22,6 +22,9 @@ from rest_framework.permissions import IsAuthenticated
 
 from core.models import Recipe
 from core.models import Tag
+from core.models import Ingredient
+
+
 
 
 from recipe import serializers
@@ -91,8 +94,8 @@ class TagViewSet(mixins.DestroyModelMixin,
     # mixins.UpdateModelMixin > allows to add the update functionality for updating models
     # mixins.DestroyModelMixin > allows to add the delete functionality for deleting models
 
-
     """Manage tags in the database."""
+
     serializer_class = serializers.TagSerializer
     queryset = Tag.objects.all()
     # ^Specify which model to use
@@ -121,4 +124,28 @@ class TagViewSet(mixins.DestroyModelMixin,
         # ^This is important because we want to display the tags in alphabetical order.
 
 
+class IngredientViewSet(mixins.DestroyModelMixin,
+                        mixins.UpdateModelMixin, 
+                        mixins.ListModelMixin,
+                        viewsets.GenericViewSet,
+                        ):
+    """Manage ingredients in the database."""
+
+    serializer_class = serializers.IngredientSerializer
+    queryset = Ingredient.objects.all()
+    # ^Specify which model to use
+
+    authentication_classes = [TokenAuthentication]
+    # ^In order to use any endpoint provided by this view, use Token Authentication
+
+    permission_classes = [IsAuthenticated]
+    # ^You have to be authenticated in order to use any endpoint provided by this view.
+
+    def get_queryset(self):
+        """Retrieve ingredients for authenticated user."""
+        return self.queryset.filter(user=self.request.user).order_by('-name')
+        # ^Only return ingredients that belong to the authenticated user. (NOT All of the ingredients)
+        # We are filtering the `queryset` (i.e. all ingredients returned above) based on the `user` that is authenticated.
+        # ^We are ordering the ingredients by their name in descending order.
+        # ^This ensures that the ingredients are sorted in alphabetical order.
 

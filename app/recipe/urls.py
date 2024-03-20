@@ -21,6 +21,8 @@ router.register('recipes', views.RecipeViewSet)  # Create a new endpoint `/api/r
 
 router.register('tags', views.TagViewSet)
 
+router.register('ingredients', views.IngredientViewSet)
+
 
 app_name = 'recipe'
 urlpatterns = [

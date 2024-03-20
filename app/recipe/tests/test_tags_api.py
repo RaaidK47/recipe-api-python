@@ -17,7 +17,7 @@ from core.models import Tag
 from recipe.serializers import TagSerializer
 
 
-TAGS_URL = reverse('recipe:tag-list')
+TAGS_URL = reverse('recipe:tag-list')  #  URL of API
 
 def detail_url(tag_id):
     """Create and return a tag detail url"""
