@@ -23,6 +23,9 @@ from django.contrib import admin
 from django.urls import path
 from django.urls import include  # allow to include URLs from different APP
 
+from django.conf.urls.static import static
+from django.conf import settings  # to access settings.py file
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/schema/', SpectacularAPIView.as_view(), name='api-schema'),  # YAML File that describes the API 
@@ -33,3 +36,9 @@ urlpatterns = [
     path('api/user/', include('user.urls')),
     path('api/recipe/', include('recipe.urls')),  
 ]
+
+if settings.DEBUG:  # to access media files
+    urlpatterns += static(
+        settings.MEDIA_URL,
+        document_root=settings.MEDIA_ROOT,
+    )
