@@ -19,6 +19,15 @@ from recipe.serializers import (
     RecipeDetailSerializer,
 )
 
+import tempfile
+import os
+from PIL import Image
+from django.contrib.auth import get_user_model
+from PIL import Image
+from rest_framework.test import APIClient
+import tempfile
+import os
+
 RECIPES_URL = reverse('recipe:recipe-list')  #  URL of API
 
 def detail_url(recipe_id):
@@ -29,12 +38,16 @@ def detail_url(recipe_id):
     # ^The first argument is the recipe_id
     # ^The second argument is the name of the view
 
+def image_upload_url(recipe_id):
+    """Create and return an image upload URL"""
+    return reverse('recipe:recipe-upload-image', args=[recipe_id])
+    # ^This is a helper function to create an image upload URL
+
 # Helper Funtion to create a Recipe
 def create_recipe(user, **params):
     """Create and return a sample recipe"""
     # params = Dictionary
     
-
     defaults = {
         'title': 'Sample recipe title',
         'time_minutes': 22,
@@ -473,3 +486,56 @@ class PrivateRecipeAPITests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(recipe.ingredients.count(), 0)
+
+
+class ImageUploadTests(TestCase):
+    """Tests for the image upload API"""
+
+    def setUp(self):
+        # ^ Runs before the tests
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_user(
+            'user@example.com',
+            'password123',
+        )
+        self.client.force_authenticate(self.user)
+        self.recipe = create_recipe(user=self.user)
+
+
+    def tearDown(self):
+        self.recipe.image.delete()  # Deletes the image that was created during tests.
+        # ^ tearDown() is similar to setUp()
+        # BUT, it runs AFTER the tests.
+
+
+    def test_upload_image(self):
+        """Test uploading an image to a recipe"""
+
+        url = image_upload_url(self.recipe.id)
+        # ^ url = /api/recipe/{id}/image/
+
+        with tempfile.NamedTemporaryFile(suffix='.jpg') as image_file:
+            # Creating a Temporary image File
+            img = Image.new('RGB', (10, 10))
+            img.save(image_file, format='JPEG')  # Saving the image to the Temporary File i.e. image_file
+            image_file.seek(0)  # Seek back to beginning of file
+            payload = {'image': image_file}  # Simulating a multipart form
+            res = self.client.post(url, payload, format='multipart')
+            # It is best practice to upload images using `multipart` forms
+
+        # After `with`, the Temporary File is cleaned automatically
+
+        self.recipe.refresh_from_db()
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('image', res.data)
+        self.assertTrue(os.path.exists(self.recipe.image.path))
+
+    def test_upload_image_bad_request(self):
+        """Test uploading an invalid image"""
+
+        url = image_upload_url(self.recipe.id)
+        payload = {'image': 'notanimage'}
+        res = self.client.post(url, payload, format='multipart')
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)

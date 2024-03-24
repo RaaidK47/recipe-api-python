@@ -16,7 +16,12 @@ Views for the Recipe APIs
 from rest_framework import (
     viewsets,
     mixins,  # mixins > Things that you can mix in to a view to add additional functionality
+    status
 )
+
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
@@ -63,6 +68,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         if self.action == 'list':
             return serializers.RecipeSerializer  # Do Not Contain `Description`
+        elif self.action == 'upload_image':
+            return serializers.RecipeImageSerializer  # Contain `Image`
         
         # ^If the action is `list`, we want to return the `RecipeSerializer` class.
         # ^If the action is anything else, we want to return the `RecipeDetailSerializer` class.
@@ -80,6 +87,37 @@ class RecipeViewSet(viewsets.ModelViewSet):
         # ^We are passing the `user` that is authenticated to the `serializer` that is being used to create the recipe.
 
         # This ensure that new recipes created have the User ID Assigned.
+
+    
+    @action(methods=['POST'], detail=True, url_path='upload-image') # Added custom @action decorator 
+    # It specify different HTTP methods supported by custom action.
+    # In this case, we are only supporting POST requests.
+    # detail=True >> Action is apply to detail portion of Model View.
+    # ^ i.e. A specific recipe must be provided.
+    # url_path='upload-image' >> Custom URL path for the custom action.
+    def upload_image(self, request, pk=None):
+        """Upload an image to Recipe"""
+
+        recipe = self.get_object()  # Get the recipe that is being updated (using the Primary Key that is specified for the action)
+        serializer = self.get_serializer(
+            recipe,
+            data=request.data
+        )
+        # ^ This will return the `RecipeImageSerializer`
+
+        if serializer.is_valid():
+            serializer.save()  # This will save the image to the Database.
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+        # ^If the serializer is valid, we want to save the data and return the response.
+
+        # If the serializer is invalid, we want to return the errors and a 400 Bad Request status code.
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
   
 
 # NOTE: Mixins to be defined BEFORE GenericViewSet

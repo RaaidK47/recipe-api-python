@@ -11,6 +11,21 @@ from django.contrib.auth.models import (
     PermissionsMixin,
 )
 
+import uuid 
+import os
+
+# Function to Generate Path of Image that we upload
+def recipe_image_file_path(instance, filename):
+    """Generate file path for new recipe image"""
+
+    ext = os.path.splitext(filename)[1]  # Get the extension of the file
+    filename = f"{uuid.uuid4()}{ext}"  # Generate a random UUID and append the extension to the filename
+
+    return os.path.join("uploads", "recipe", filename)  # Join the path components to form a complete file path. # noqa: E501
+    # ^This function will be called when the recipe image is uploaded. 
+    # To ensures that the string is created in the appropriate format for the OS that we're running the code on. 
+    # ^ Instead to manually typing the PATH.
+   
 
 class UserManager(BaseUserManager):
     """Manager for users"""
@@ -81,6 +96,8 @@ class Recipe(models.Model):  # base Model Class
     # any of our tags can be associated to any of our recipes and any of our recipes can be associated to any of our tags.
 
     ingredients = models.ManyToManyField("Ingredient")  # ^Same as above
+
+    image = models.ImageField(null=True, upload_to=recipe_image_file_path)  
 
     def __str__(self):
         return self.title
