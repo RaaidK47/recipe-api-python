@@ -11,7 +11,12 @@ Views for the Recipe APIs
 #             partial_update (Update one or more fields of a model instance)
 #             destroy (Delete a model instance)
 
-            
+from drf_spectacular.utils import (
+    extend_schema_view,
+    extend_schema,
+    OpenApiParameter,
+    OpenApiTypes
+)
 
 from rest_framework import (
     viewsets,
@@ -35,8 +40,27 @@ from core.models import Ingredient
 from recipe import serializers
 
 
-
-
+# Decorator that extend auto-generated schema that is created by drf_spectacular.
+@extend_schema_view(
+    # Extend schema for the `list` endpoint.
+    # i.e. we are adding below filters to the auto-generated schema for the `list` endpoint.
+    list=extend_schema(
+        parameters=[
+            # These are parameters that can be passed to requests that are made to list-API for this view.
+            OpenApiParameter(
+                # Specifying details of parameters that can be accepted in API request.
+                'tags',
+                OpenApiTypes.STR, # Type is a string (i.e. Comma Separated List)
+                description='Comma separated list of tag IDs to filter',  # User-defined Description
+            ),
+            OpenApiParameter(
+                'ingredients',
+                OpenApiTypes.STR,
+                description='Comma separated list of ingredient IDs to filter',
+            )
+        ]
+    )
+)
 class RecipeViewSet(viewsets.ModelViewSet):
     # Model View Set >> Specifically setup to work directly with a django Model
     # We can use a lot of Existing logic provided by Model Serializer to perform CRUD operations
@@ -54,10 +78,34 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     # ^You have to be authenticated in order to use any endpoint provided by this view.
 
+
+    def _params_to_ints(self, qs):
+        """Convert a list of strings to integers."""
+        # "1,2,3" >> [1,2,3]
+        return [int(str_id) for str_id in qs.split(',')]
+
+
     # Overwriding default get_query_set() method
     def get_queryset(self):
         """Retrieve recipes for authenticated user."""
-        return self.queryset.filter(user=self.request.user).order_by('-id') 
+        tags = self.request.query_params.get('tags')  # Comma Separated list that is provided as string
+        ingredients = self.request.query_params.get('ingredients')
+        queryset = self.queryset  # So we can apply filters to queryset as we go
+
+        if tags:  # if tags are provided
+            tag_ids = self._params_to_ints(tags)
+            
+            # Filtering Syntax
+            queryset = queryset.filter(tags__id__in=tag_ids)  # < How to filter on related on a Database table using Django.
+            # ^Filter the `queryset` based on the `tags` that are provided.
+
+        if ingredients:
+            ingredient_ids = self._params_to_ints(ingredients)
+            queryset = queryset.filter(ingredients__id__in=ingredient_ids)
+            # ^Filter the `queryset` based on the `ingredients` that are provided.
+
+        return queryset.filter(user=self.request.user).order_by('-id').distinct()
+        # distinct() > to avoid duplicate results if multiple recipes assinged to same tags/ingredients
     
         # Only return recipes that belong to the authenticated user. (NOT All of the recipes)
         # We are filtering the `queryset` (i.e. all recipes returned above) based on the `user` that is authenticated.
@@ -118,13 +166,25 @@ class RecipeViewSet(viewsets.ModelViewSet):
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
-  
+    
 
+@extend_schema_view(
+    list = extend_schema(
+        parameters=[
+            OpenApiParameter(
+                'assigned_only',
+                OpenApiTypes.INT, enum=[0, 1],
+                description='Filter by items assigned to recipes.',
+            )
+        ]
+    )
+)
 # NOTE: Mixins to be defined BEFORE GenericViewSet
-class TagViewSet(mixins.DestroyModelMixin,
-                 mixins.UpdateModelMixin, 
-                 mixins.ListModelMixin, 
-                 viewsets.GenericViewSet):
+# This class is used to add additional functionality to tags/ingrediets viewset.
+class BaseRecipeAttrViewSet(mixins.DestroyModelMixin,
+                            mixins.UpdateModelMixin,
+                            mixins.ListModelMixin,
+                            viewsets.GenericViewSet):
     # Generic View Set >> A class which specify a variety of views
     # > View > Functions for different request methods (for CRUD operations)
     # Mixins Base Class is used to add additional functionality to a viewset.
@@ -132,29 +192,31 @@ class TagViewSet(mixins.DestroyModelMixin,
     # mixins.UpdateModelMixin > allows to add the update functionality for updating models
     # mixins.DestroyModelMixin > allows to add the delete functionality for deleting models
 
-    """Manage tags in the database."""
-
-    serializer_class = serializers.TagSerializer
-    queryset = Tag.objects.all()
-    # ^Specify which model to use
-
-    """Manage tags in the database."""
-    serializer_class = serializers.TagSerializer
-    queryset = Tag.objects.all()
-    # ^Specify which model to use
-
+    """Base viewset for recipe attributes."""
     authentication_classes = [TokenAuthentication]
     # ^In order to use any endpoint provided by this view, use Token Authentication
 
     permission_classes = [IsAuthenticated]
     # ^You have to be authenticated in order to use any endpoint provided by this view.
 
-
-
     # Overwriding default get_query_set() method
     def get_queryset(self):
-        """Retrieve tags for authenticated user."""
-        return self.queryset.filter(user=self.request.user).order_by('-name')
+        """Filter queryset to authenticated user."""
+
+        assigned_only = bool(
+            int(self.request.query_params.get('assigned_only', 0)) # 0 = default value to return if assigned_only value not provided.
+        )
+
+        queryset = self.queryset  
+
+        if assigned_only:
+            queryset = queryset.filter(recipe__isnull=False)  # ^Filter the `queryset` based on the `recipe` that is provided
+            # ^ There is a recipe that is associated with this value i.e. tag/ingredient.
+
+        return queryset.filter(
+            user=self.request.user 
+            ).order_by('-name').distinct()  
+    
         # ^Only return tags that belong to the authenticated user. (NOT All of the tags)
         # We are filtering the `queryset` (i.e. all tags returned above) based on the `user` that is authenticated.
         # ^We are ordering the tags by their name in descending order.
@@ -162,28 +224,24 @@ class TagViewSet(mixins.DestroyModelMixin,
         # ^This is important because we want to display the tags in alphabetical order.
 
 
-class IngredientViewSet(mixins.DestroyModelMixin,
-                        mixins.UpdateModelMixin, 
-                        mixins.ListModelMixin,
-                        viewsets.GenericViewSet,
-                        ):
+# Below classes Inherit from BaseRecipeAttrViewSet.
+# All functions are defined in BaseRecipeAttrViewSet.
+
+class TagViewSet(BaseRecipeAttrViewSet):
+
+    """Manage tags in the database."""
+
+    serializer_class = serializers.TagSerializer
+    queryset = Tag.objects.all()
+    # ^Specify which model to use
+
+
+class IngredientViewSet(BaseRecipeAttrViewSet):
     """Manage ingredients in the database."""
 
     serializer_class = serializers.IngredientSerializer
     queryset = Ingredient.objects.all()
     # ^Specify which model to use
 
-    authentication_classes = [TokenAuthentication]
-    # ^In order to use any endpoint provided by this view, use Token Authentication
-
-    permission_classes = [IsAuthenticated]
-    # ^You have to be authenticated in order to use any endpoint provided by this view.
-
-    def get_queryset(self):
-        """Retrieve ingredients for authenticated user."""
-        return self.queryset.filter(user=self.request.user).order_by('-name')
-        # ^Only return ingredients that belong to the authenticated user. (NOT All of the ingredients)
-        # We are filtering the `queryset` (i.e. all ingredients returned above) based on the `user` that is authenticated.
-        # ^We are ordering the ingredients by their name in descending order.
-        # ^This ensures that the ingredients are sorted in alphabetical order.
+   
 
