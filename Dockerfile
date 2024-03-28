@@ -46,8 +46,8 @@ RUN python -m venv /py && \
         django-user && \
     mkdir -p /vol/web/media && \
     mkdir -p /vol/web/static && \
-    chown -R django-user:django-user /vol && \
-    chmod -R 755 /vol && \
+    chown -R django-user:django-user /vol/ && \
+    chmod -R 755 /vol/web && \
     chmod -R +x /scripts  
 
 # - Create Python Virtual Environment
@@ -64,7 +64,7 @@ RUN python -m venv /py && \
     # name of user
 # Making the /scripts directory executable
 
-ENV PATH="/py/bin:$PATH"
+ENV PATH="/scripts:/py/bin:$PATH"
 
 # ^when we run any command in our project, we don't want to have to specify the full path of our virtual environment.
 

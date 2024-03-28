@@ -4,6 +4,9 @@
   # or service that has different data structures and is written in a different set of
   # technologies can transfer data to another application using a standard format.
 
+
+# This docker-compose file is for Development Environment Only.
+
 version: "3.9"
 # ^Version of Docker Compose syntax that we are using
 
@@ -28,6 +31,7 @@ services:
       - DB_NAME=devdb
       - DB_USER=devuser
       - DB_PASS=changeme
+      - DEBUG=1
     depends_on:
       - db
       # Docker will start 'db' service before running 'app' service

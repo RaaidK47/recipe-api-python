@@ -1,4 +1,4 @@
-#!/bin/sh   
+#!/bin/sh
 
 # ^ This `shebang` marks this file as a shell script. 
 
