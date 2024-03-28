@@ -18,7 +18,7 @@ python manage.py migrate
 # Run migrations automatically when App starts. 
 # So that database migrated to correct state. (If there are changes in App)
 
-uwsqi --socket :9000 --workers 4 --master --enable-threads --module app.wsgi
+uwsgi --socket :9000 --workers 4 --master --enable-threads --module app.wsgi
 #^ Running uWSGI server.
 # Creating a TCP socket on port 9000. (This is the port on which NGiNX will listen.)
 # 4 WSGI workers are created.

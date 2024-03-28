@@ -4,11 +4,6 @@ version: "3.9"
 
 services:   
   app:
-    command:
-        - bash
-        - -c
-        - |
-          echo "Creating App!!!!"
     build:
       context: .
     restart: always
@@ -36,18 +31,13 @@ services:
     
 
   proxy:
-    command:
-        - bash
-        - -c
-        - |
-          echo "Creating Proxy!!!!"
     build: 
       context: ./proxy
     restart: always
     depends_on:
       - app
     ports:
-      - 8000:8000
+      - 80:8000
     volumes:
       - static-data:/vol/static
     
